@@ -23,9 +23,12 @@ public class CsvWriter {
     private String        separator;
     private String        fileName;
     private String        charset;
+    private int           headerSize;
     private boolean       hasHeaderBuffer;
+
     private static final String DEFAULTCHARSET = "utf-8";
     private static final String DEFAULTSEPARATOR = ",";
+
     public CsvWriter(String fileName) throws IOException {
         this(fileName, DEFAULTCHARSET, DEFAULTSEPARATOR);
     }
@@ -46,6 +49,7 @@ public class CsvWriter {
 
 
     public void writerHeader(List headers) {
+        this.headerSize = headers.size();
         StringBuilder sb = new StringBuilder();
         writerBuffer(headers, sb);
         headerBuffer = sb;
@@ -54,7 +58,11 @@ public class CsvWriter {
 
     public void writerRawRecord(List rawRecord) {
         StringBuilder sb = new StringBuilder();
-        writerBuffer(rawRecord, sb);
+        for (int i = 0,size = rawRecord.size(); i < size; i++) {
+            sb.append(rawRecord.get(i)+separator);
+            if(i%headerSize==1)
+                sb.replace(sb.length()-1,sb.length(),"\n");
+        }
         rowBuffer.append(sb);
     }
 
@@ -104,7 +112,9 @@ public class CsvWriter {
             sb = headerBuffer;
         }else
             sb = rowBuffer;
-            writer.write(sb.toString(), 0, sb.length());
+        int size = sb.length();
+        sb.delete(size-1,size);
+        writer.write(sb.toString(), 0, sb.length());
 
         }catch (Exception e){
             e.printStackTrace();
